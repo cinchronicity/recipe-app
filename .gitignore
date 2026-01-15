@@ -13,6 +13,13 @@ db.sqlite3
 
 # Backup files
 *.bak
+*~
+*.backup
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
 
 # OS / Editor
 .DS_Store

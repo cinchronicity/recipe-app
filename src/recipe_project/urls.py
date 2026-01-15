@@ -15,8 +15,13 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include 
 
+
+#Tells Django which app handles which URL paths.
 urlpatterns = [
+    # Admin panel route
     path('admin/', admin.site.urls),
+    # Root URL (homepage) is handled by the recipes app
+    path("", include("recipes.urls")),
 ]

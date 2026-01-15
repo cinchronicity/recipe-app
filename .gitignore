@@ -1,0 +1,13 @@
+# virtual environments
+venv/
+a2-ve-recipeapp/
+.env
+
+# Django
+__pycache__/
+*.pyc
+db.sqlite3
+
+# OS / editor
+.DS_Store
+.vscode/

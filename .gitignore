@@ -18,9 +18,9 @@ a2-ve-recipeapp/
 *.backup
 
 # Database files
-*.sqlite
-*.sqlite3
-*.db
+# *.sqlite
+# *.sqlite3
+# *.db
 
 # OS / Editor
 .DS_Store

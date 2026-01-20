@@ -7,9 +7,10 @@ venv/
 .env/
 a2-ve-recipeapp/
 
-# Django
-db.sqlite3
-*.sqlite3
+# Django - for production apps we usually don't commit the database
+
+# db.sqlite3
+# *.sqlite3
 
 # Backup files
 *.bak

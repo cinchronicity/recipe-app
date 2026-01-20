@@ -5,27 +5,167 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Recipe App</title>
+  <title>Recipe App - Home Cooking Made Simple</title>
   <link rel="stylesheet" href="{% static 'recipes/css/style.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Source+Sans+Pro:wght@300;400;500&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
-  <div class="container">
-    <div class="hero">
-      <h1>Welcome to Recipe App 🍳</h1>
-      <p>Create recipes, save ingredients, and search by what you have on hand.</p>
-    </div>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <nav class="nav-container">
+      <div class="logo">
+        <h1><a href="{% url 'recipes:home' %}">Recipe App</a></h1>
+      </div>
+      <div class="nav-links">
+        <a href="{% url 'recipes:home' %}" class="active">Home</a>
+        <a href="{% url 'recipes:recipes_list' %}">Recipes</a>
+        <a href="#categories">Categories</a>
+        <a href="#about">About</a>
+      </div>
+    </nav>
+  </header>
 
-    <div class="features-card">
-      <h2>Coming Soon</h2>
-      <ul class="features-list">
-        <li>Add new recipes</li>
-        <li>Search recipes by ingredient</li>
-        <li>View recipe details</li>
-      </ul>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h2>Trusted Recipes for Home Cooks</h2>
+      <p>Discover delicious, tested recipes with clear instructions and timing for every meal of the day.</p>
     </div>
-  </div>
+  </section>
+
+  <!-- Featured Recipes -->
+  <section class="recipes-section">
+    <div class="container">
+      <h2 class="section-title">Featured Recipes</h2>
+      <div class="recipe-grid">
+        {% for recipe in featured_recipes %}
+        <article class="recipe-card">
+          <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="recipe-link">
+            <div class="recipe-image">
+              {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}">
+              {% else %}
+              <img src="{% static 'images/default-recipe.jpg' %}" alt="Recipe image">
+              {% endif %}
+              <div class="recipe-category">{{ recipe.get_category_display }}</div>
+            </div>
+            <div class="recipe-content">
+              <h3 class="recipe-title">{{ recipe.name }}</h3>
+              <p class="recipe-description">{{ recipe.description|truncatewords:15 }}</p>
+              <div class="recipe-meta">
+                <span class="recipe-time">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="#666" stroke-width="2" />
+                    <polyline points="12,6 12,12 16,14" stroke="#666" stroke-width="2" />
+                  </svg>
+                  {{ recipe.total_time }} mins
+                </span>
+                <span class="recipe-difficulty difficulty-{{ recipe.difficulty|lower }}">{{ recipe.difficulty }}</span>
+              </div>
+            </div>
+          </a>
+        </article>
+        {% empty %}
+        <p class="no-recipes">No recipes available. Add some recipes through the admin panel!</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Sections -->
+  {% if breakfast_recipes %}
+  <section class="category-section">
+    <div class="container">
+      <h2 class="section-title">Perfect for Breakfast</h2>
+      <div class="recipe-row">
+        {% for recipe in breakfast_recipes %}
+        <article class="recipe-card-small">
+          <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="recipe-link-small">
+            <div class="recipe-image-small">
+              {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}">
+              {% else %}
+              <img src="{% static 'images/default-recipe.jpg' %}" alt="Recipe image">
+              {% endif %}
+            </div>
+            <div class="recipe-content-small">
+              <h4>{{ recipe.name }}</h4>
+              <div class="recipe-time-small">{{ recipe.total_time }} mins</div>
+            </div>
+          </a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if dinner_recipes %}
+  <section class="category-section">
+    <div class="container">
+      <h2 class="section-title">Weeknight Dinners</h2>
+      <div class="recipe-row">
+        {% for recipe in dinner_recipes %}
+        <article class="recipe-card-small">
+          <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="recipe-link-small">
+            <div class="recipe-image-small">
+              {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}">
+              {% else %}
+              <img src="{% static 'images/default-recipe.jpg' %}" alt="Recipe image">
+              {% endif %}
+            </div>
+            <div class="recipe-content-small">
+              <h4>{{ recipe.name }}</h4>
+              <div class="recipe-time-small">{{ recipe.total_time }} mins</div>
+            </div>
+          </a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {% if dessert_recipes %}
+  <section class="category-section">
+    <div class="container">
+      <h2 class="section-title">Sweet Treats</h2>
+      <div class="recipe-row">
+        {% for recipe in dessert_recipes %}
+        <article class="recipe-card-small">
+          <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="recipe-link-small">
+            <div class="recipe-image-small">
+              {% if recipe.image %}
+              <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}">
+              {% else %}
+              <img src="{% static 'images/default-recipe.jpg' %}" alt="Recipe image">
+              {% endif %}
+            </div>
+            <div class="recipe-content-small">
+              <h4>{{ recipe.name }}</h4>
+              <div class="recipe-time-small">{{ recipe.total_time }} mins</div>
+            </div>
+          </a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
+    </div>
+  </footer>
+
 </body>
-
-</html>
 
 </html>

@@ -1,0 +1,252 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ recipe.name }} - Recipe App</title>
+  <link rel="stylesheet" href="{% static 'recipes/css/style.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Source+Sans+Pro:wght@300;400;500;600&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <nav class="nav-container">
+      <div class="logo">
+        <h1><a href="{% url 'recipes:home' %}">Recipe App</a></h1>
+      </div>
+      <div class="nav-links">
+        <a href="{% url 'recipes:home' %}">Home</a>
+        <a href="{% url 'recipes:recipes_list' %}">Recipes</a>
+        <a href="#categories">Categories</a>
+        <a href="#about">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Recipe Hero Section -->
+  <section class="recipe-hero">
+    <div class="recipe-hero-content">
+      <div class="breadcrumb">
+        <a href="{% url 'recipes:home' %}">Home</a>
+        <span>&nbsp;/&nbsp;</span>
+        <a href="{% url 'recipes:recipes_list' %}">Recipes</a>
+        <span>&nbsp;/&nbsp;</span>
+        <span>{{ recipe.name }}</span>
+      </div>
+      <h1 class="recipe-title">{{ recipe.name }}</h1>
+      <p class="recipe-description">{{ recipe.description }}</p>
+
+      <!-- Recipe Meta Info -->
+      <div class="recipe-meta-grid">
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12,6 12,12 16,14"></polyline>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Prep Time</span>
+            <span class="meta-value">{{ recipe.prep_time }} min</span>
+          </div>
+        </div>
+
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14,2 14,8 20,8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10,9 9,9 8,9"></polyline>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Cook Time</span>
+            <span class="meta-value">{{ recipe.cooking_time }} min</span>
+          </div>
+        </div>
+
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Servings</span>
+            <span class="meta-value">{{ recipe.servings }}</span>
+          </div>
+        </div>
+
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+              </polygon>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Difficulty</span>
+            <span class="meta-value difficulty-{{ recipe.difficulty|lower }}">{{ recipe.difficulty }}</span>
+          </div>
+        </div>
+
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Total Time</span>
+            <span class="meta-value">{{ recipe.total_time }} min</span>
+          </div>
+        </div>
+
+        <div class="meta-card">
+          <div class="meta-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
+              <line x1="16" y1="8" x2="2" y2="22"></line>
+              <line x1="17.5" y1="15" x2="9" y2="15"></line>
+            </svg>
+          </div>
+          <div class="meta-content">
+            <span class="meta-label">Category</span>
+            <span class="meta-value">{{ recipe.category|title }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="recipe-hero-image">
+      {% if recipe.image %}
+      <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" class="recipe-main-image">
+      {% else %}
+      <div class="recipe-placeholder">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <circle cx="8.5" cy="8.5" r="1.5"></circle>
+          <polyline points="21,15 16,10 5,21"></polyline>
+        </svg>
+        <p>No image available</p>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+
+  <!-- Recipe Content -->
+  <section class="recipe-detail-content">
+    <div class="container">
+      <div class="recipe-layout">
+        <!-- Ingredients Section -->
+        <div class="ingredients-section">
+          <h2 class="section-title">Ingredients</h2>
+          {% if recipe.ingredients.all %}
+          <ul class="ingredients-list">
+            {% for ingredient in recipe.ingredients.all %}
+            <li class="ingredient-item">
+              <span class="ingredient-name">{{ ingredient.name }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="no-content">No ingredients listed for this recipe.</p>
+          {% endif %}
+        </div>
+
+        <!-- Instructions Section -->
+        <div class="instructions-section">
+          <h2 class="section-title">Instructions</h2>
+          {% if recipe.instructions %}
+          <div class="instructions-content">
+            {{ recipe.instructions|linebreaks }}
+          </div>
+          {% else %}
+          <p class="no-content">No instructions provided for this recipe.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recipe Info Bar -->
+  <section class="recipe-info-bar">
+    <div class="container">
+      <div class="info-bar-content">
+        <div class="recipe-stats">
+          <span class="stat"><strong>Added:</strong> {{ recipe.created_at|date:"F d, Y" }}</span>
+          <span class="stat"><strong>Category:</strong> {{ recipe.category|title }}</span>
+          <span class="stat"><strong>Ingredients:</strong> {{ recipe.ingredients.count }}</span>
+        </div>
+        <div class="recipe-actions">
+          <a href="{% url 'recipes:recipes_list' %}" class="back-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            Back to Recipes
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Related Recipes -->
+  {% if related_recipes %}
+  <section class="related-recipes">
+    <div class="container">
+      <h2 class="section-title">More {{ recipe.category|title }} Recipes</h2>
+      <div class="related-recipes-grid">
+        {% for related_recipe in related_recipes %}
+        <article class="related-recipe-card">
+          <a href="{% url 'recipes:recipe_detail' related_recipe.id %}" class="related-recipe-link">
+            {% if related_recipe.image %}
+            <img src="{{ related_recipe.image.url }}" alt="{{ related_recipe.name }}" class="related-recipe-image">
+            {% else %}
+            <div class="related-recipe-placeholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21,15 16,10 5,21"></polyline>
+              </svg>
+            </div>
+            {% endif %}
+            <div class="related-recipe-content">
+              <h3 class="related-recipe-title">{{ related_recipe.name }}</h3>
+              <div class="related-recipe-meta">
+                <span class="time">{{ related_recipe.total_time }} min</span>
+                <span class="difficulty difficulty-{{ related_recipe.difficulty|lower }}">{{ related_recipe.difficulty
+                  }}</span>
+              </div>
+            </div>
+          </a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
+    </div>
+  </footer>
+
+</body>
+
+</html>

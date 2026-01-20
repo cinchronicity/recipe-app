@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+# this points to the src folder
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -115,10 +116,21 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
 
+# https://docs.djangoproject.com/en/4.2/howto/static-files/
+#Tells Django where to look for static files (CSS, JS, etc.) Developer generated
 STATIC_URL = 'static/'
+
+#Tells Django where to physically look for static files
+# Additional locations of static files
+STATICFILES_DIRS = [
+    BASE_DIR / "static",  # Project-level static files
+]
+
+# Media files (user-uploaded images)
+MEDIA_URL = "/media/"
+# base dir is src folder 
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

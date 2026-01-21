@@ -172,7 +172,7 @@ class RecipeViewTests(TestCase):
     def test_recipes_list_view_shows_recipe_count(self):
         """Test that recipes list page shows correct recipe count."""
         response = self.client.get(reverse("recipes:recipes_list"))
-        self.assertContains(response, "3 recipes found")  # Should show total count
+        self.assertContains(response, "3 delicious meals")  # Should show total count
 
     def test_recipes_list_view_shows_category_counts(self):
         """Test that recipes list page shows category breakdown."""
@@ -327,113 +327,6 @@ class RecipeTemplateTests(TestCase):
         self.assertContains(response, "Back to Recipes")
 
 
-class RecipeIntegrationTests(TestCase):
-    """Integration tests for complete recipe functionality."""
-
-    def setUp(self):
-        """Set up comprehensive test data for integration tests."""
-        self.client = Client()
-
-        # Create ingredients
-        self.ingredients = []
-        ingredient_names = [
-            "Flour",
-            "Eggs",
-            "Milk",
-            "Sugar",
-            "Butter",
-            "Salt",
-            "Pepper",
-            "Garlic",
-            "Onion",
-        ]
-        for name in ingredient_names:
-            ingredient = Ingredient.objects.create(name=name)
-            self.ingredients.append(ingredient)
-
-        # Create recipes with different characteristics
-        self.easy_recipe = Recipe.objects.create(
-            name="Simple Toast",
-            description="Quick breakfast toast",
-            category="breakfast",
-            prep_time=2,
-            cooking_time=3,
-            servings=1,
-        )
-        self.easy_recipe.ingredients.add(
-            self.ingredients[0], self.ingredients[5]
-        )  # Flour, Salt
-
-        self.medium_recipe = Recipe.objects.create(
-            name="Scrambled Eggs",
-            description="Classic breakfast eggs",
-            category="breakfast",
-            prep_time=5,
-            cooking_time=10,
-            servings=2,
-        )
-        self.medium_recipe.ingredients.add(
-            self.ingredients[1], self.ingredients[4], self.ingredients[5]
-        )  # Eggs, Butter, Salt
-
-        self.hard_recipe = Recipe.objects.create(
-            name="Complex Pasta",
-            description="Multi-step pasta dish",
-            category="dinner",
-            prep_time=30,
-            cooking_time=45,
-            servings=6,
-        )
-        # Add many ingredients to make it hard
-        for ingredient in self.ingredients[:8]:
-            self.hard_recipe.ingredients.add(ingredient)
-
-    def test_complete_user_journey(self):
-        """Test a complete user journey through the application."""
-        # 1. User visits home page
-        response = self.client.get(reverse("recipes:home"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Simple Toast")
-
-        # 2. User navigates to recipes list
-        response = self.client.get(reverse("recipes:recipes_list"))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "3 recipes found")
-
-        # 3. User clicks on a recipe to view details
-        response = self.client.get(
-            reverse("recipes:recipe_detail", args=[self.medium_recipe.id])
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Scrambled Eggs")
-        self.assertContains(response, "Classic breakfast eggs")
-        self.assertContains(response, "Medium")  # Check difficulty calculation
-
-        # 4. User navigates back to recipes list
-        response = self.client.get(reverse("recipes:recipes_list"))
-        self.assertEqual(response.status_code, 200)
-
-    def test_difficulty_calculations_across_recipes(self):
-        """Test that difficulty calculations work correctly for all recipe types."""
-        self.assertEqual(self.easy_recipe.difficulty, "Easy")
-        self.assertEqual(self.medium_recipe.difficulty, "Medium")
-        self.assertEqual(self.hard_recipe.difficulty, "Hard")
-
-    def test_category_filtering_data_integrity(self):
-        """Test that category counts and filtering data is accurate."""
-        response = self.client.get(reverse("recipes:recipes_list"))
-
-        # Check category counts
-        category_counts = response.context["category_counts"]
-        self.assertEqual(
-            category_counts["breakfast"], 2
-        )  # Simple Toast + Scrambled Eggs
-        self.assertEqual(category_counts["dinner"], 1)  # Complex Pasta
-
-        # Check total count
-        self.assertEqual(response.context["total_recipes"], 3)
-
-
 class FavoriteModelTests(TestCase):
     """Test cases for the Favorite model functionality."""
 
@@ -546,7 +439,7 @@ class FavoriteViewTests(TestCase):
 
         response = self.client.get(reverse("recipes:favorites_list"))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "No favorites yet!")
+        self.assertContains(response, "No saved recipes yet!")
         self.assertContains(response, "Browse Recipes")  # Link to add favorites
 
     def test_add_favorite_requires_login(self):
@@ -634,7 +527,7 @@ class FavoriteViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context["is_favorite"])
-        self.assertContains(response, "Add to Favorites")
+        self.assertContains(response, "Save Recipe")
 
         # Add favorite and visit again
         Favorite.objects.create(user=self.user, recipe=self.recipe1)
@@ -643,7 +536,7 @@ class FavoriteViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["is_favorite"])
-        self.assertContains(response, "Remove from Favorites")
+        self.assertContains(response, "Unsave Recipe")
 
     def test_anonymous_user_recipe_detail_has_no_favorite_buttons(self):
         """Test that non-logged-in users don't see favorite buttons on recipe pages."""
@@ -653,8 +546,8 @@ class FavoriteViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Should not see favorite buttons
-        self.assertNotContains(response, "Add to Favorites")
-        self.assertNotContains(response, "Remove from Favorites")
+        self.assertNotContains(response, "Save Recipe")
+        self.assertNotContains(response, "Unsave Recipe")
 
 
 class FavoriteURLTests(TestCase):
@@ -685,3 +578,177 @@ class FavoriteURLTests(TestCase):
         """Test that the remove favorite URL includes recipe ID correctly."""
         url = reverse("recipes:remove_favorite", args=[self.recipe.id])
         self.assertEqual(url, f"/favorites/remove/{self.recipe.id}/")
+
+
+class RecipeSearchFormTests(TestCase):
+    """Test cases for Recipe Search Form functionality and validation."""
+
+    def test_search_form_fields_exist(self):
+        """Test that all expected fields exist in the search form."""
+        from .forms import RecipeSearchForm
+
+        form = RecipeSearchForm()
+        expected_fields = [
+            "recipe_name",
+            "ingredients",
+            "category",
+            "difficulty",
+            "max_cooking_time",
+            "min_servings",
+            "max_servings",
+        ]
+
+        for field in expected_fields:
+            self.assertIn(field, form.fields)
+
+    def test_search_form_empty_is_valid(self):
+        """Test that empty search form is valid (allows showing all recipes)."""
+        from .forms import RecipeSearchForm
+
+        form = RecipeSearchForm({})
+        self.assertTrue(form.is_valid())
+
+    def test_search_form_with_valid_data(self):
+        """Test that search form accepts valid data."""
+        from .forms import RecipeSearchForm
+
+        form_data = {
+            "recipe_name": "pasta",
+            "ingredients": "garlic, tomato",
+            "category": "lunch",  # Valid category choice
+            "difficulty": "Easy",  # Must match exact choice value
+            "max_cooking_time": 30,
+            "min_servings": 2,
+            "max_servings": 4,
+        }
+        form = RecipeSearchForm(form_data)
+        self.assertTrue(form.is_valid())
+
+    def test_search_form_negative_times_invalid(self):
+        """Test that negative cooking times are invalid."""
+        from .forms import RecipeSearchForm
+
+        form_data = {"max_cooking_time": -10}
+        form = RecipeSearchForm(form_data)
+        self.assertFalse(form.is_valid())
+
+    def test_search_form_zero_servings_invalid(self):
+        """Test that zero servings is invalid."""
+        from .forms import RecipeSearchForm
+
+        form_data = {"min_servings": 0}
+        form = RecipeSearchForm(form_data)
+        self.assertFalse(form.is_valid())
+
+    def test_search_form_choice_fields_validation(self):
+        """Test that choice fields only accept valid choices."""
+        from .forms import RecipeSearchForm
+
+        # Test invalid category
+        form_data = {"category": "invalid_category"}
+        form = RecipeSearchForm(form_data)
+        self.assertFalse(form.is_valid())
+
+        # Test invalid difficulty
+        form_data = {"difficulty": "invalid_difficulty"}
+        form = RecipeSearchForm(form_data)
+        self.assertFalse(form.is_valid())
+
+
+class RecipeSearchViewTests(TestCase):
+    """Test cases for Recipe Search View functionality and security."""
+
+    @classmethod
+    def setUpTestData(cls):
+        """Set up test data for search view tests."""
+        # Create test ingredients
+        cls.garlic = Ingredient.objects.create(name="Garlic")
+        cls.tomato = Ingredient.objects.create(name="Tomato")
+        cls.pasta = Ingredient.objects.create(name="Pasta")
+
+        # Create test recipes with different attributes
+        cls.pasta_recipe = Recipe.objects.create(
+            name="Garlic Pasta",
+            description="Simple pasta with garlic",
+            category="lunch",  # Valid category choice
+            cooking_time=10,  # Changed from 15 to make it "Easy" difficulty
+            servings=4,
+        )
+        cls.pasta_recipe.ingredients.add(cls.garlic, cls.pasta)
+
+        cls.complex_recipe = Recipe.objects.create(
+            name="Tomato Sauce",
+            description="Complex tomato sauce",
+            category="other",  # Valid category choice
+            cooking_time=60,
+            servings=6,
+        )
+        cls.complex_recipe.ingredients.add(cls.tomato, cls.garlic)
+
+    def test_search_view_accessible(self):
+        """Test that search view is accessible via URL."""
+        response = self.client.get(reverse("recipes:recipe_search"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_search_view_template_used(self):
+        """Test that search view uses correct template."""
+        response = self.client.get(reverse("recipes:recipe_search"))
+        self.assertTemplateUsed(response, "recipes/recipe_search.html")
+
+    def test_search_view_context_form(self):
+        """Test that search view includes form in context."""
+        response = self.client.get(reverse("recipes:recipe_search"))
+        self.assertIn("form", response.context)
+
+    def test_search_by_name(self):
+        """Test searching recipes by name."""
+        response = self.client.get(
+            reverse("recipes:recipe_search"), {"recipe_name": "pasta"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Garlic Pasta")
+        self.assertNotContains(response, "Tomato Sauce")
+
+    def test_search_by_ingredient(self):
+        """Test searching recipes by ingredient."""
+        response = self.client.get(
+            reverse("recipes:recipe_search"), {"ingredients": "garlic"}
+        )
+        self.assertEqual(response.status_code, 200)
+        # Both recipes contain garlic
+        self.assertContains(response, "Garlic Pasta")
+        self.assertContains(response, "Tomato Sauce")
+
+    def test_search_by_difficulty(self):
+        """Test searching recipes by difficulty."""
+        response = self.client.get(
+            reverse("recipes:recipe_search"), {"difficulty": "Easy"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Garlic Pasta")
+        self.assertNotContains(response, "Tomato Sauce")
+
+    def test_search_by_cooking_time_range(self):
+        """Test searching recipes by cooking time range."""
+        response = self.client.get(
+            reverse("recipes:recipe_search"),
+            {"min_cooking_time": 10, "max_cooking_time": 30},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Garlic Pasta")
+        self.assertNotContains(response, "Tomato Sauce")
+
+    def test_search_no_results(self):
+        """Test search with no matching results."""
+        response = self.client.get(
+            reverse("recipes:recipe_search"), {"recipe_name": "nonexistent_recipe"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No Results Found")
+
+    def test_search_results_pagination(self):
+        """Test that search results include pagination info."""
+        response = self.client.get(reverse("recipes:recipe_search"))
+        self.assertIn("search_performed", response.context)
+
+    

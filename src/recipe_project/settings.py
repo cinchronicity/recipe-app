@@ -124,7 +124,7 @@ STATIC_URL = "static/"
 # Tells Django where to physically look for static files
 # Additional locations of static files
 STATICFILES_DIRS = [
-    BASE_DIR / "static",  # Project-level static files
+    # BASE_DIR / "static",  # No project-level static files directory
 ]
 
 # Media files (user-uploaded images)
@@ -133,7 +133,7 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Authentication settings
-LOGIN_URL = "/login/"
+LOGIN_URL = "/accounts/login/"
 LOGIN_REDIRECT_URL = "/recipes/"
 LOGOUT_REDIRECT_URL = "/"
 

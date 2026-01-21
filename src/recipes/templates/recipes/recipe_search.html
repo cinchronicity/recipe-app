@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Search Recipes - Recipe App</title>
+  <link rel="stylesheet" href="{% static 'recipes/css/style.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Source+Sans+Pro:wght@300;400;500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <nav class="nav-container">
+      <div class="logo">
+        <h1><a href="{% url 'recipes:home' %}">Recipe App</a></h1>
+      </div>
+      <div class="nav-links">
+        <a href="{% url 'recipes:home' %}">Home</a>
+        <a href="{% url 'recipes:recipes_list' %}">Recipes</a>
+        <a href="{% url 'recipes:recipe_search' %}" class="active">Search</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'recipes:favorites_list' %}">Saved</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'accounts:logout' %}">Logout ({{ user.username }})</a>
+        {% else %}
+        <a href="{% url 'accounts:login' %}" class="login-link">Login</a>
+        {% endif %}
+      </div>
+    </nav>
+  </header>
+
+  <!-- Page Header -->
+  <section class="page-header">
+    <div class="container">
+      <h1 class="page-title">Search Recipes</h1>
+      <p class="page-subtitle">Find the perfect recipe using our advanced search filters</p>
+    </div>
+  </section>
+
+  <!-- Search Form Section -->
+  <section class="search-form-section">
+    <div class="container">
+      <div class="search-form-wrapper">
+        <form method="GET" class="recipe-search-form">
+          <div class="form-grid">
+            <!-- Recipe Name -->
+            <div class="form-group full-width">
+              <label for="{{ form.recipe_name.id_for_label }}" class="form-label">
+                {{ form.recipe_name.label }}
+              </label>
+              {{ form.recipe_name }}
+            </div>
+
+            <!-- Ingredients -->
+            <div class="form-group full-width">
+              <label for="{{ form.ingredients.id_for_label }}" class="form-label">
+                {{ form.ingredients.label }}
+              </label>
+              {{ form.ingredients }}
+              <small class="form-help">{{ form.ingredients.help_text }}</small>
+            </div>
+
+            <!-- Category and Difficulty -->
+            <div class="form-group">
+              <label for="{{ form.category.id_for_label }}" class="form-label">
+                {{ form.category.label }}
+              </label>
+              {{ form.category }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.difficulty.id_for_label }}" class="form-label">
+                {{ form.difficulty.label }}
+              </label>
+              {{ form.difficulty }}
+            </div>
+
+            <!-- Cooking Time -->
+            <div class="form-group">
+              <label for="{{ form.max_cooking_time.id_for_label }}" class="form-label">
+                {{ form.max_cooking_time.label }}
+              </label>
+              {{ form.max_cooking_time }}
+              <small class="form-help">{{ form.max_cooking_time.help_text }}</small>
+            </div>
+
+            <!-- Servings Range -->
+            <div class="form-group">
+              <label for="{{ form.min_servings.id_for_label }}" class="form-label">
+                {{ form.min_servings.label }}
+              </label>
+              {{ form.min_servings }}
+            </div>
+
+            <div class="form-group">
+              <label for="{{ form.max_servings.id_for_label }}" class="form-label">
+                {{ form.max_servings.label }}
+              </label>
+              {{ form.max_servings }}
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-search">
+              🔍 Search Recipes
+            </button>
+            <button type="submit" name="show_all" value="1" class="btn btn-secondary">
+              📋 Show All Recipes
+            </button>
+            <a href="{% url 'recipes:recipe_search' %}" class="btn btn-outline">
+              🗑️ Clear Form
+            </a>
+          </div>
+
+          <!-- Form Validation Errors -->
+          {% if form.errors %}
+          <div class="form-errors">
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            <div class="alert alert-error">{{ error }}</div>
+            {% endfor %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Search Results Section -->
+  {% if search_performed %}
+  <section class="search-results-section">
+    <div class="container">
+      <!-- Results Header -->
+      <div class="results-header">
+        <h2 class="results-title">
+          {% if has_results %}
+          Search Results
+          {% else %}
+          No Results Found
+          {% endif %}
+        </h2>
+        <div class="results-count">
+          <span class="count-number">{{ results_count }}</span>
+          <span class="count-label">recipe{{ results_count|pluralize }} found</span>
+        </div>
+      </div>
+
+      {% if has_results %}
+      <!-- Results Table -->
+      <div class="results-table-wrapper">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Recipe Name</th>
+              <th>Category</th>
+              <th>Difficulty</th>
+              <th>Prep Time</th>
+              <th>Cook Time</th>
+              <th>Total Time</th>
+              <th>Servings</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for recipe in search_results_list %}
+            <tr class="result-row">
+              <td class="recipe-image-cell">
+                {% if recipe.image_url %}
+                <img src="{{ recipe.image_url }}" alt="{{ recipe.name }}" class="recipe-thumbnail">
+                {% else %}
+                <div class="recipe-placeholder-thumb">🍽️</div>
+                {% endif %}
+              </td>
+              <td class="recipe-name-cell">
+                <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="recipe-link">
+                  {{ recipe.name }}
+                </a>
+              </td>
+              <td class="category-cell">
+                <span class="category-badge">{{ recipe.category }}</span>
+              </td>
+              <td class="difficulty-cell">
+                <span class="difficulty-badge difficulty-{{ recipe.difficulty|lower }}">
+                  {{ recipe.difficulty }}
+                </span>
+              </td>
+              <td class="time-cell">{{ recipe.prep_time }} min</td>
+              <td class="time-cell">{{ recipe.cooking_time }} min</td>
+              <td class="time-cell total-time">{{ recipe.total_time }} min</td>
+              <td class="servings-cell">{{ recipe.servings }}</td>
+              <td class="description-cell">{{ recipe.description }}</td>
+              <td class="actions-cell">
+                <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn btn-small btn-primary">
+                  View Recipe
+                </a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'recipes:add_favorite' recipe.id %}" class="btn btn-small btn-outline">
+                  💝
+                </a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <!-- No Results Message -->
+      <div class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h3>No recipes match your search criteria</h3>
+        <p>Try adjusting your filters or search terms to find more recipes.</p>
+        <div class="no-results-suggestions">
+          <p><strong>Suggestions:</strong></p>
+          <ul>
+            <li>Check your spelling</li>
+            <li>Use fewer or different search terms</li>
+            <li>Try broader categories or difficulty levels</li>
+            <li>Increase the cooking time limit</li>
+          </ul>
+        </div>
+        <button type="submit" form="show-all-form" class="btn btn-primary">
+          Show All Recipes
+        </button>
+        <form id="show-all-form" method="GET" style="display: none;">
+          <input type="hidden" name="show_all" value="1">
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
+    </div>
+  </footer>
+
+  <!-- Auto-scroll to results script -->
+  {% if search_performed %}
+  <script>
+    // Scroll to results section when page loads with search results
+    document.addEventListener('DOMContentLoaded', function () {
+      const resultsSection = document.querySelector('.search-results-section');
+      if (resultsSection) {
+        // Small delay to ensure page is fully rendered
+        setTimeout(function () {
+          resultsSection.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+            inline: 'nearest'
+          });
+        }, 100);
+      }
+    });
+  </script>
+  {% endif %}
+
+</body>
+
+</html>

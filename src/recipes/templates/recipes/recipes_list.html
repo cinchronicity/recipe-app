@@ -24,8 +24,9 @@
       <div class="nav-links">
         <a href="{% url 'recipes:home' %}">Home</a>
         <a href="{% url 'recipes:recipes_list' %}" class="active">Recipes</a>
+        <a href="{% url 'recipes:recipe_search' %}">Search</a>
         {% if user.is_authenticated %}
-        <a href="{% url 'recipes:favorites_list' %}">My Favorites</a>
+        <a href="{% url 'recipes:favorites_list' %}">Saved</a>
         {% endif %}
         {% if user.is_authenticated %}
         <a href="{% url 'accounts:logout' %}">Logout ({{ user.username }})</a>
@@ -45,53 +46,29 @@
     </div>
   </section>
 
-  <!-- Search & Filter Section -->
-  <section class="search-filter-section">
+
+  <!-- Quick Search Section -->
+  <section class="quick-search-section">
     <div class="container">
-      <div class="search-wrapper">
-        <div class="search-box">
-          <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.35-4.35"></path>
-          </svg>
-          <input type="text" placeholder="Search recipes by name, ingredient, or description..." class="search-input"
-            id="recipe-search">
-        </div>
-        <div class="filter-controls">
-          <div class="filter-group">
-            <label for="category-filter">Category</label>
-            <select id="category-filter" class="filter-select">
-              <option value="">All Categories</option>
-              {% for category, count in category_counts.items %}
-              <option value="{{ category }}">{{ category|title }} ({{ count }})</option>
-              {% endfor %}
-            </select>
+      <div class="quick-search-wrapper">
+        <form action="{% url 'recipes:recipe_search' %}" method="GET" class="quick-search-form">
+          <div class="search-box">
+            <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input type="text" name="recipe_name" placeholder="Search recipes by name..." class="search-input"
+              id="quick-recipe-search">
+            <button type="submit" class="quick-search-btn">
+              🔍 Search
+            </button>
           </div>
-          <div class="filter-group">
-            <label for="difficulty-filter">Difficulty</label>
-            <select id="difficulty-filter" class="filter-select">
-              <option value="">Any Difficulty</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label for="time-filter">Max Time</label>
-            <select id="time-filter" class="filter-select">
-              <option value="">Any Time</option>
-              <option value="15">Under 15 min</option>
-              <option value="30">Under 30 min</option>
-              <option value="60">Under 1 hour</option>
-              <option value="120">Under 2 hours</option>
-            </select>
-          </div>
-          <button type="button" class="clear-filters-btn" id="clear-filters">Clear All</button>
-        </div>
-      </div>
-      <div class="search-results-count">
-        <span id="results-count">{{ total_recipes }} recipe{{ total_recipes|pluralize }} found</span>
+          <p class="search-hint">
+            Want to filter by category, difficulty, or cooking time? Try our <a href="{% url 'recipes:recipe_search' %}"
+              class="advanced-search-link">advanced search</a>
+          </p>
+        </form>
       </div>
     </div>
   </section>

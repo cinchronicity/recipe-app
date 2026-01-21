@@ -1,14 +1,14 @@
 {% extends 'recipes/base.html' %}
 {% load static %}
 
-{% block title %}My Favorites - Recipe App{% endblock %}
+{% block title %}Saved Recipes - Recipe App{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <section class="page-header">
   <div class="container">
-    <h1 class="page-title">My Favorite Recipes</h1>
-    <p class="page-subtitle">Your personal collection of saved recipes</p>
+    <h1 class="page-title">Saved Recipes</h1>
+    <p class="page-subtitle">Your personal collection of saved recipes and cooking insights</p>
   </div>
 </section>
 
@@ -20,7 +20,7 @@
     <div class="recipe-stats-wrapper">
       <div class="recipe-stats-card">
         <span class="stat-number">{{ total_favorites }}</span>
-        <span class="stat-label">Favorite Recipe{{ total_favorites|pluralize }}</span>
+        <span class="stat-label">Saved Recipe{{ total_favorites|pluralize }}</span>
       </div>
     </div>
 
@@ -74,7 +74,7 @@
     {% else %}
     <div class="empty-state">
       <div class="empty-icon">💝</div>
-      <h2>No favorites yet!</h2>
+      <h2>No saved recipes yet!</h2>
       <p>Start exploring recipes and save your favorites for easy access.</p>
       <a href="{% url 'recipes:recipes_list' %}" class="btn btn-primary">Browse Recipes</a>
     </div>
@@ -82,10 +82,66 @@
   </div>
 </section>
 
+<!-- Personal Cooking Insights Section -->
+{% if has_charts and total_favorites > 0 %}
+<section class="cooking-insights-section">
+  <div class="container">
+    <h2 class="insights-title">Your Cooking Insights</h2>
+    <p class="insights-subtitle">Discover patterns in your saved recipes to make smarter cooking decisions</p>
+
+    <div class="charts-grid">
+      <!-- Ingredients Bar Chart -->
+      {% if charts.ingredients_chart %}
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>🛒 Shopping List Essentials</h3>
+          <p>Stock up on these ingredients based on your saved recipes</p>
+        </div>
+        <div class="chart-image-container">
+          <img src="data:image/png;base64,{{ charts.ingredients_chart }}" alt="Most Common Ingredients Chart"
+            class="chart-image">
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Categories Pie Chart -->
+      {% if charts.categories_chart %}
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>🍽️ Your Recipe Preferences</h3>
+          <p>See what types of meals you love to save</p>
+        </div>
+        <div class="chart-image-container">
+          <img src="data:image/png;base64,{{ charts.categories_chart }}" alt="Recipe Categories Distribution Chart"
+            class="chart-image">
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Cooking Time Line Chart -->
+      {% if charts.cooking_time_chart %}
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>⏱️ Your Time Preferences</h3>
+          <p>Understand your cooking time patterns</p>
+        </div>
+        <div class="chart-image-container">
+          <img src="data:image/png;base64,{{ charts.cooking_time_chart }}" alt="Cooking Time Preferences Chart"
+            class="chart-image">
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
 <!-- Footer -->
 <footer class="site-footer">
   <div class="container">
     <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
   </div>
 </footer>
+
+
 {% endblock %}

@@ -1,0 +1,91 @@
+{% extends 'recipes/base.html' %}
+{% load static %}
+
+{% block title %}My Favorites - Recipe App{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">My Favorite Recipes</h1>
+    <p class="page-subtitle">Your personal collection of saved recipes</p>
+  </div>
+</section>
+
+<!-- Main Content -->
+<section class="recipes-section">
+  <div class="container">
+    {% if favorite_recipes %}
+    <!-- Recipe Stats -->
+    <div class="recipe-stats-wrapper">
+      <div class="recipe-stats-card">
+        <span class="stat-number">{{ total_favorites }}</span>
+        <span class="stat-label">Favorite Recipe{{ total_favorites|pluralize }}</span>
+      </div>
+    </div>
+
+    <!-- Recipes Grid -->
+    <div class="recipe-grid">
+      {% for recipe in favorite_recipes %}
+      <div class="recipe-card">
+        <div class="recipe-image">
+          {% if recipe.image %}
+          <img src="{{ recipe.image.url }}" alt="{{ recipe.name }}" loading="lazy">
+          {% else %}
+          <div class="placeholder-image">
+            <span class="placeholder-icon">🍽️</span>
+          </div>
+          {% endif %}
+          <div class="recipe-overlay">
+            <span class="difficulty {{ recipe.difficulty|lower }}">{{ recipe.difficulty }}</span>
+          </div>
+        </div>
+
+        <div class="recipe-content">
+          <h3 class="recipe-title">
+            <a href="{% url 'recipes:recipe_detail' recipe.id %}">{{ recipe.name }}</a>
+          </h3>
+          <p class="recipe-description">{{ recipe.description|truncatewords:15 }}</p>
+
+          <div class="recipe-meta">
+            <span class="meta-item">
+              <span class="meta-icon">⏱️</span>
+              {{ recipe.total_time }} min
+            </span>
+            <span class="meta-item">
+              <span class="meta-icon">👥</span>
+              {{ recipe.servings }}
+            </span>
+            <span class="meta-item">
+              <span class="meta-icon">🏷️</span>
+              {{ recipe.get_category_display }}
+            </span>
+          </div>
+
+          <div class="recipe-actions">
+            <a href="{% url 'recipes:recipe_detail' recipe.id %}" class="btn btn-primary btn-small">
+              View Recipe
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">💝</div>
+      <h2>No favorites yet!</h2>
+      <p>Start exploring recipes and save your favorites for easy access.</p>
+      <a href="{% url 'recipes:recipes_list' %}" class="btn btn-primary">Browse Recipes</a>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="container">
+    <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
+  </div>
+</footer>
+{% endblock %}

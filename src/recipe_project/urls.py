@@ -14,16 +14,27 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
-from django.urls import path, include 
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
 
 
-#Tells Django which app handles which URL paths.
+def favicon_view(request):
+    """Return empty response for favicon requests to prevent 404 errors."""
+    return HttpResponse(status=204)  # No content
+
+
+# Tells Django which app handles which URL paths.
 urlpatterns = [
     # Admin panel route
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
+    # Favicon handler to prevent 404 errors
+    path("favicon.ico", favicon_view, name="favicon"),
+    # Authentication routes
+    path("", include("accounts.urls")),
     # Root URL (homepage) is handled by the recipes app
     path("", include("recipes.urls")),
 ]

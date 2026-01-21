@@ -12,4 +12,13 @@ urlpatterns = [
     path("recipes/", views.recipes_list, name="recipes_list"),
     # Recipe detail page
     path("recipes/<int:id>/", views.recipe_detail, name="recipe_detail"),
+    # User favorites page (requires login)
+    path("favorites/", views.favorites_list, name="favorites_list"),
+    # Add/remove favorites (requires login)
+    path("favorites/add/<int:recipe_id>/", views.add_favorite, name="add_favorite"),
+    path(
+        "favorites/remove/<int:recipe_id>/",
+        views.remove_favorite,
+        name="remove_favorite",
+    ),
 ]

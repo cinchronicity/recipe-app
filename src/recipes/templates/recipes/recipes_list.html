@@ -24,8 +24,14 @@
       <div class="nav-links">
         <a href="{% url 'recipes:home' %}">Home</a>
         <a href="{% url 'recipes:recipes_list' %}" class="active">Recipes</a>
-        <a href="#categories">Categories</a>
-        <a href="#about">About</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'recipes:favorites_list' %}">My Favorites</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <a href="{% url 'accounts:logout' %}">Logout ({{ user.username }})</a>
+        {% else %}
+        <a href="{% url 'accounts:login' %}" class="login-link">Login</a>
+        {% endif %}
       </div>
     </nav>
   </header>

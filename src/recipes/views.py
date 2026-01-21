@@ -1,5 +1,8 @@
-from django.shortcuts import render, get_object_or_404
-from .models import Recipe
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from .models import Recipe, Favorite
 
 # Create your views here.
 
@@ -47,8 +50,64 @@ def recipe_detail(request, id):
     # Get related recipes in same category for suggestions
     related_recipes = Recipe.objects.filter(category=recipe.category).exclude(id=id)[:3]
 
+    # Check if user has favorited this recipe (if logged in)
+    is_favorite = False
+    if request.user.is_authenticated:
+        is_favorite = Favorite.objects.filter(user=request.user, recipe=recipe).exists()
+
     context = {
         "recipe": recipe,
         "related_recipes": related_recipes,
+        "is_favorite": is_favorite,
     }
     return render(request, "recipes/recipe_detail.html", context)
+
+
+@login_required
+def favorites_list(request):
+    """Display user's favorite recipes (requires login)."""
+    # Get all favorites for the current user
+    user_favorites = Favorite.objects.filter(user=request.user).select_related("recipe")
+
+    # Extract just the recipes for easier template handling
+    favorite_recipes = [favorite.recipe for favorite in user_favorites]
+
+    context = {
+        "favorite_recipes": favorite_recipes,
+        "total_favorites": len(favorite_recipes),
+    }
+    return render(request, "recipes/favorites_list.html", context)
+
+
+@login_required
+def add_favorite(request, recipe_id):
+    """Add a recipe to user's favorites."""
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+
+    # Create favorite if it doesn't exist
+    favorite, created = Favorite.objects.get_or_create(user=request.user, recipe=recipe)
+
+    if created:
+        messages.success(request, f'"{recipe.name}" has been added to your favorites!')
+    else:
+        messages.info(request, f'"{recipe.name}" is already in your favorites!')
+
+    return redirect("recipes:recipe_detail", id=recipe_id)
+
+
+@login_required
+def remove_favorite(request, recipe_id):
+    """Remove a recipe from user's favorites."""
+    recipe = get_object_or_404(Recipe, id=recipe_id)
+
+    try:
+        favorite = Favorite.objects.get(user=request.user, recipe=recipe)
+        favorite.delete()
+        messages.success(
+            request, f'"{recipe.name}" has been removed from your favorites!'
+        )
+    except Favorite.DoesNotExist:
+        messages.error(request, f'"{recipe.name}" was not in your favorites!')
+
+    # Redirect back to the referring page or favorites list
+    return redirect(request.META.get("HTTP_REFERER", "recipes:favorites_list"))

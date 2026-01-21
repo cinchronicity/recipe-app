@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from ingredients.models import Ingredient
 
 
@@ -61,3 +62,20 @@ class Recipe(models.Model):
         if self.total_time < 30 and ingredient_count <= 8:
             return "Medium"
         return "Hard"
+
+
+class Favorite(models.Model):
+    """Model to track user's favorite recipes."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorites")
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE, related_name="favorited_by"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "recipe")  # Prevent duplicate favorites
+        ordering = ["-created_at"]  # Show newest favorites first
+
+    def __str__(self):
+        return f"{self.user.username} - {self.recipe.name}"

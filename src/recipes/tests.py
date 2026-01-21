@@ -1,7 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+from django.contrib.auth.models import User
 from ingredients.models import Ingredient
-from .models import Recipe
+from .models import Recipe, Favorite
 
 
 class RecipeModelTests(TestCase):
@@ -431,3 +432,256 @@ class RecipeIntegrationTests(TestCase):
 
         # Check total count
         self.assertEqual(response.context["total_recipes"], 3)
+
+
+class FavoriteModelTests(TestCase):
+    """Test cases for the Favorite model functionality."""
+
+    def setUp(self):
+        """Set up test data for favorite tests."""
+        # Create a test user
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        # Create a test recipe
+        self.recipe = Recipe.objects.create(
+            name="Test Recipe", description="A recipe for testing", cooking_time=20
+        )
+
+    def test_favorite_creation(self):
+        """Test that a user can favorite a recipe successfully."""
+        favorite = Favorite.objects.create(user=self.user, recipe=self.recipe)
+
+        # Check the favorite was created
+        self.assertEqual(Favorite.objects.count(), 1)
+        self.assertEqual(favorite.user, self.user)
+        self.assertEqual(favorite.recipe, self.recipe)
+
+    def test_favorite_string_representation(self):
+        """Test that favorite displays nicely as 'username - recipe name'."""
+        favorite = Favorite.objects.create(user=self.user, recipe=self.recipe)
+        expected_string = f"{self.user.username} - {self.recipe.name}"
+        self.assertEqual(str(favorite), expected_string)
+
+    def test_unique_favorite_constraint(self):
+        """Test that a user cannot favorite the same recipe twice."""
+        # Create first favorite
+        Favorite.objects.create(user=self.user, recipe=self.recipe)
+
+        # Try to create duplicate favorite - should raise an error
+        from django.db import IntegrityError
+
+        with self.assertRaises(IntegrityError):
+            Favorite.objects.create(user=self.user, recipe=self.recipe)
+
+    def test_user_can_favorite_multiple_recipes(self):
+        """Test that one user can favorite many different recipes."""
+        recipe2 = Recipe.objects.create(
+            name="Another Recipe", description="Different recipe", cooking_time=15
+        )
+
+        # User favorites both recipes
+        Favorite.objects.create(user=self.user, recipe=self.recipe)
+        Favorite.objects.create(user=self.user, recipe=recipe2)
+
+        # Check both favorites exist
+        self.assertEqual(Favorite.objects.filter(user=self.user).count(), 2)
+
+    def test_recipe_can_be_favorited_by_multiple_users(self):
+        """Test that one recipe can be favorited by many different users."""
+        user2 = User.objects.create_user(username="testuser2", password="testpass123")
+
+        # Both users favorite the same recipe
+        Favorite.objects.create(user=self.user, recipe=self.recipe)
+        Favorite.objects.create(user=user2, recipe=self.recipe)
+
+        # Check both favorites exist
+        self.assertEqual(Favorite.objects.filter(recipe=self.recipe).count(), 2)
+
+
+class FavoriteViewTests(TestCase):
+    """Test cases for favorite-related views and user interactions."""
+
+    def setUp(self):
+        """Set up test data for favorite view tests."""
+        # Create test user and log them in
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        self.client = Client()
+
+        # Create test recipes
+        self.recipe1 = Recipe.objects.create(
+            name="Favorite Recipe 1", description="First test recipe", cooking_time=20
+        )
+        self.recipe2 = Recipe.objects.create(
+            name="Favorite Recipe 2", description="Second test recipe", cooking_time=25
+        )
+
+    def test_favorites_list_requires_login(self):
+        """Test that favorites page redirects anonymous users to login."""
+        response = self.client.get(reverse("recipes:favorites_list"))
+        # Should redirect to login page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_favorites_list_shows_user_favorites(self):
+        """Test that logged-in users see their favorited recipes."""
+        # Log in the user
+        self.client.login(username="testuser", password="testpass123")
+
+        # Add a favorite recipe
+        Favorite.objects.create(user=self.user, recipe=self.recipe1)
+
+        # Visit favorites page
+        response = self.client.get(reverse("recipes:favorites_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Favorite Recipe 1")
+        self.assertContains(response, "Favorite Recipe")  # Check count display
+
+    def test_empty_favorites_list_shows_helpful_message(self):
+        """Test that users with no favorites see a helpful empty state."""
+        # Log in user with no favorites
+        self.client.login(username="testuser", password="testpass123")
+
+        response = self.client.get(reverse("recipes:favorites_list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No favorites yet!")
+        self.assertContains(response, "Browse Recipes")  # Link to add favorites
+
+    def test_add_favorite_requires_login(self):
+        """Test that adding favorites requires user to be logged in."""
+        response = self.client.get(
+            reverse("recipes:add_favorite", args=[self.recipe1.id])
+        )
+        # Should redirect to login page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_add_favorite_creates_favorite_and_redirects(self):
+        """Test that logged-in users can successfully add favorites."""
+        # Log in the user
+        self.client.login(username="testuser", password="testpass123")
+
+        # Add favorite
+        response = self.client.get(
+            reverse("recipes:add_favorite", args=[self.recipe1.id])
+        )
+
+        # Should redirect back to recipe detail page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(f"/recipes/{self.recipe1.id}/", response.url)
+
+        # Check favorite was created
+        self.assertTrue(
+            Favorite.objects.filter(user=self.user, recipe=self.recipe1).exists()
+        )
+
+    def test_add_favorite_twice_shows_friendly_message(self):
+        """Test that trying to favorite same recipe twice shows helpful message."""
+        # Log in and create existing favorite
+        self.client.login(username="testuser", password="testpass123")
+        Favorite.objects.create(user=self.user, recipe=self.recipe1)
+
+        # Try to favorite again
+        response = self.client.get(
+            reverse("recipes:add_favorite", args=[self.recipe1.id])
+        )
+
+        # Should still work but show different message
+        self.assertEqual(response.status_code, 302)
+        # Only one favorite should exist
+        self.assertEqual(
+            Favorite.objects.filter(user=self.user, recipe=self.recipe1).count(), 1
+        )
+
+    def test_remove_favorite_requires_login(self):
+        """Test that removing favorites requires user to be logged in."""
+        response = self.client.get(
+            reverse("recipes:remove_favorite", args=[self.recipe1.id])
+        )
+        # Should redirect to login page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/login/", response.url)
+
+    def test_remove_favorite_deletes_favorite(self):
+        """Test that logged-in users can successfully remove favorites."""
+        # Log in and create favorite
+        self.client.login(username="testuser", password="testpass123")
+        Favorite.objects.create(user=self.user, recipe=self.recipe1)
+
+        # Remove favorite
+        response = self.client.get(
+            reverse("recipes:remove_favorite", args=[self.recipe1.id])
+        )
+
+        # Should redirect (to referring page or favorites list)
+        self.assertEqual(response.status_code, 302)
+
+        # Check favorite was removed
+        self.assertFalse(
+            Favorite.objects.filter(user=self.user, recipe=self.recipe1).exists()
+        )
+
+    def test_recipe_detail_shows_favorite_status(self):
+        """Test that recipe detail pages show correct favorite button for logged-in users."""
+        # Log in user
+        self.client.login(username="testuser", password="testpass123")
+
+        # Visit recipe without favorite
+        response = self.client.get(
+            reverse("recipes:recipe_detail", args=[self.recipe1.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context["is_favorite"])
+        self.assertContains(response, "Add to Favorites")
+
+        # Add favorite and visit again
+        Favorite.objects.create(user=self.user, recipe=self.recipe1)
+        response = self.client.get(
+            reverse("recipes:recipe_detail", args=[self.recipe1.id])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["is_favorite"])
+        self.assertContains(response, "Remove from Favorites")
+
+    def test_anonymous_user_recipe_detail_has_no_favorite_buttons(self):
+        """Test that non-logged-in users don't see favorite buttons on recipe pages."""
+        response = self.client.get(
+            reverse("recipes:recipe_detail", args=[self.recipe1.id])
+        )
+        self.assertEqual(response.status_code, 200)
+
+        # Should not see favorite buttons
+        self.assertNotContains(response, "Add to Favorites")
+        self.assertNotContains(response, "Remove from Favorites")
+
+
+class FavoriteURLTests(TestCase):
+    """Test cases for favorite-related URL patterns."""
+
+    def setUp(self):
+        """Set up test data for URL tests."""
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass123"
+        )
+        self.recipe = Recipe.objects.create(
+            name="URL Test Recipe",
+            description="Recipe for testing URLs",
+            cooking_time=15,
+        )
+
+    def test_favorites_list_url_resolves(self):
+        """Test that the favorites list URL works correctly."""
+        url = reverse("recipes:favorites_list")
+        self.assertEqual(url, "/favorites/")
+
+    def test_add_favorite_url_resolves(self):
+        """Test that the add favorite URL includes recipe ID correctly."""
+        url = reverse("recipes:add_favorite", args=[self.recipe.id])
+        self.assertEqual(url, f"/favorites/add/{self.recipe.id}/")
+
+    def test_remove_favorite_url_resolves(self):
+        """Test that the remove favorite URL includes recipe ID correctly."""
+        url = reverse("recipes:remove_favorite", args=[self.recipe.id])
+        self.assertEqual(url, f"/favorites/remove/{self.recipe.id}/")

@@ -1,0 +1,99 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Recipe App</title>
+  <link rel="stylesheet" href="{% static 'recipes/css/style.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=Source+Sans+Pro:wght@300;400;500&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header Navigation -->
+  <header class="site-header">
+    <nav class="nav-container">
+      <div class="logo">
+        <h1><a href="{% url 'recipes:home' %}">Recipe App</a></h1>
+      </div>
+      <div class="nav-links">
+        <a href="{% url 'recipes:home' %}">Home</a>
+        <a href="{% url 'recipes:recipes_list' %}">Recipes</a>
+        <a href="#categories">Categories</a>
+        <a href="#about">About</a>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Login Form Section -->
+  <section class="login-section">
+    <div class="container">
+      <div class="login-wrapper">
+        <div class="login-form-container">
+          <h1 class="login-title">Welcome Back</h1>
+          <p class="login-subtitle">Sign in to access your recipe collection</p>
+
+          <!-- Display Messages -->
+          {% if messages %}
+          {% for message in messages %}
+          <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+          </div>
+          {% endfor %}
+          {% endif %}
+
+          <form method="post" class="login-form">
+            {% csrf_token %}
+
+            <div class="form-group">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" id="username" name="username" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+
+            <button type="submit" class="login-btn">Sign In</button>
+          </form>
+
+          <div class="login-footer">
+            <p class="login-note">
+              New to Recipe App? Contact admin for account creation.
+            </p>
+            <p class="back-link">
+              <a href="{% url 'recipes:home' %}">← Back to Home</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="login-image">
+          <div class="login-placeholder">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <h3>Access Your Recipes</h3>
+            <p>Login to view, create, and manage your personal recipe collection.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>&copy; 2026 Recipe App. Made with Django and ❤️</p>
+    </div>
+  </footer>
+
+</body>
+
+</html>
